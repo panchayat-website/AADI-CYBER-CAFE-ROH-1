@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cyber Security Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    margin: 0;
+    background: #0a0f0a;
+    color: #00ff88;
+    font-family: monospace;
+}
+
+.header {
+    padding: 10px 20px;
+    border-bottom: 1px solid #00ff88;
+    font-size: 18px;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+    padding: 10px;
+}
+
+.panel {
+    border: 1px solid #00ff88;
+    padding: 10px;
+    background: rgba(0, 30, 0, 0.4);
+}
+
+.terminal {
+    height: 250px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 13px;
+    background: black;
+    padding: 8px;
+}
+
+input {
+    width: 100%;
+    background: black;
+    color: #00ff88;
+    border: 1px solid #00ff88;
+    padding: 6px;
+    margin-top: 5px;
+}
+
+.stat {
+    margin: 6px 0;
+}
+
+canvas {
+    width: 100%;
+    height: 150px;
+    background: black;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    CYBER SECURITY MONITOR • <span id="time"></span>
+</div>
+
+<div class="container">
+    <div class="panel">
+        <strong>System Activity</strong>
+        <canvas id="graph"></canvas>
+    </div>
+
+    <div class="panel">
+        <strong>System Info</strong>
+        <div id="info"></div>
+    </div>
+
+    <div class="panel">
+        <strong>Network Latency Test</strong>
+        <div id="ping">Testing...</div>
+    </div>
+
+    <div class="panel">
+        <strong>Command Console</strong>
+        <div class="terminal" id="terminal"></div>
+        <input id="cmd" placeholder="Type command (help)" onkeydown="runCmd(event)">
+    </div>
+</div>
+
+<script>
+/* CLOCK */
+setInterval(()=>{
+    document.getElementById("time").innerText = new Date().toLocaleTimeString();
+},1000);
+
+/* SYSTEM INFO (REAL BROWSER DATA) */
+const infoDiv = document.getElementById("info");
+infoDiv.innerHTML =
+    "<div class='stat'>Platform: " + navigator.platform + "</div>" +
+    "<div class='stat'>CPU Cores: " + navigator.hardwareConcurrency + "</div>" +
+    "<div class='stat'>RAM (approx): " + (navigator.deviceMemory || "Unknown") + " GB</div>" +
+    "<div class='stat'>User Agent: " + navigator.userAgent + "</div>";
+
+/* FAKE BUT LIVE ACTIVITY GRAPH */
+const canvas = document.getElementById("graph");
+const ctx = canvas.getContext("2d");
+let points = Array(50).fill(0);
+
+function drawGraph(){
+    ctx.fillStyle="black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle="#00ff88";
+    ctx.beginPath();
+    points.push(Math.random()*100);
+    points.shift();
+
+    points.forEach((p,i)=>{
+        const x = i * (canvas.width/50);
+        const y = canvas.height - (p/100)*canvas.height;
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+}
+setInterval(drawGraph,500);
+
+/* NETWORK LATENCY TEST */
+async function pingTest(){
+    const start = performance.now();
+    try {
+        await fetch("https://example.com", {mode:"no-cors"});
+        const latency = Math.round(performance.now() - start);
+        document.getElementById("ping").innerText = "Latency: " + latency + " ms";
+    } catch {
+        document.getElementById("ping").innerText = "Network blocked";
+    }
+}
+setInterval(pingTest,5000);
+pingTest();
+
+/* TERMINAL */
+const terminal = document.getElementById("terminal");
+
+function runCmd(e){
+    if(e.key==="Enter"){
+        const cmd=e.target.value.trim();
+        terminal.innerHTML += "> "+cmd+"\n";
+        if(cmd==="help"){
+            terminal.innerHTML += "Commands: info, time, clear\n";
+        }
+        else if(cmd==="info"){
+            terminal.innerHTML += "Browser: "+navigator.userAgent+"\n";
+        }
+        else if(cmd==="time"){
+            terminal.innerHTML += new Date().toString()+"\n";
+        }
+        else if(cmd==="clear"){
+            terminal.innerHTML="";
+        }
+        else{
+            terminal.innerHTML += "Unknown command\n";
+        }
+        e.target.value="";
+        terminal.scrollTop=terminal.scrollHeight;
+    }
+}
+</script>
+
+</body>
+</html>
+
+
